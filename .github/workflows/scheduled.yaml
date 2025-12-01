@@ -1,0 +1,42 @@
+name: Nightly Branch Updater
+
+on:
+  schedule:
+    - cron: "0 2 * * *"   # Runs every night at 02:00 UTC
+  workflow_dispatch:
+
+jobs:
+  update-branches:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        branch: ["main", "develop", "feature-xyz"]  # <--- your branches here
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ matrix.branch }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Write datetime to test.txt
+        run: |
+          date +"%Y-%m-%d %H:%M:%S" > test.txt
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add test.txt
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Nightly update: $(date)"
+          fi
+
+      - name: Push changes
+        if: success()
+        run: |
+          git push origin HEAD:${{ matrix.branch }}
