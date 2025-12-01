@@ -5,6 +5,9 @@ on:
     - cron: "0 2 * * *"   # Runs every night at 02:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-branches:
     runs-on: ubuntu-latest
